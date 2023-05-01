@@ -4,11 +4,19 @@ services:
     build: ./bedrockconnect
     ports:
       - "19132:19132/udp"
-  bind9:
-    build: 
-      context: ./bind9
-      args: 
-        BCIP: 104.238.130.180
-        NSIP: 104.238.130.180
-    ports: 
-      - "53:53/udp"
+    volumes:
+      - bedrockConnect:/brc
+    restart: "unless-stopped"
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+#  bind9:
+#    build: 
+#      context: ./bind9
+#      args: 
+#        BCIP: 1.1.1.1
+#        NSIP: 1.1.1.1
+#    ports: 
+#      - "53:53/udp"
+volumes:
+  bedrockConnect:
+    driver: local
