@@ -6,7 +6,9 @@ services:
       - "19132:19132/udp"
     volumes:
       - bedrockConnect:/brc
-    env_file: "sql.env"
+    env_file: 
+      - "sql.env"
+      - "brc.env"
     restart: "unless-stopped"
     stdin_open: true # docker run -i
     tty: true # docker run -t
@@ -16,14 +18,17 @@ services:
     volumes:
       - bedrockConnect:/var/lib/mysql
     env_file: sql.env
-#  bind9:
-#    build: 
-#      context: ./bind9
-#      args: 
-#        BCIP: 1.1.1.1
-#        NSIP: 1.1.1.1
-#    ports: 
-#      - "53:53/udp"
+  bind9:
+    build: 
+      context: ./bind9
+      args: 
+        BCIP: ${BRCIP}
+        NSIP: ${BRCIP}
+
+#    env_file: "bind.env"
+    ports: 
+      -  ${BRCIP}:53:53/udp
+#      -  53:53/udp
 volumes:
   bedrockConnect:
     driver: local

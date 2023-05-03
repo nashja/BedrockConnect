@@ -1,0 +1,5 @@
+#example brc.env file - 
+# note the mysql_host is set to the name of the service for mysql in the docker-compose file
+NODB = "false"
+MYSQL_HOST = "mysql"
+

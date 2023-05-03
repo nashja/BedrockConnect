@@ -1,0 +1,5 @@
+#example sql.env file
+MYSQL_ROOT_PASSWORD = "big_secret"
+MYSQL_DATABASE = "bedrock-connect"
+MYSQL_USER = "brc"
+MYSQL_PASSWORD = "bigger_secret"

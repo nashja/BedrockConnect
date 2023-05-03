@@ -32,7 +32,7 @@ fi
 echo "Starting bedrock connect server..."
 #CMD ["java", "-Xms256M", "-Xmx256M", "-jar", "BedrockConnect-1.0-SNAPSHOT.jar", "nodb=true"]
 
-exec java -Xms256M -Xmx256M -jar /brc/BedrockConnect-1.0-SNAPSHOT.jar nodb=${NODB} mysql_user=${MYSQL_USER} mysql_pass=${MYSQL_PASSWORD} mysql_host=mysql custom_servers=/brc/custom_servers.json
+exec java -Xms256M -Xmx256M -jar /brc/BedrockConnect-1.0-SNAPSHOT.jar nodb=${NODB} mysql_user=${MYSQL_USER} mysql_pass=${MYSQL_PASSWORD} mysql_host=${MYSQL_HOST} custom_servers=/brc/custom_servers.json
 
 # Exit container
 exit 0
