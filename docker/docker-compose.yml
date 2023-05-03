@@ -6,9 +6,16 @@ services:
       - "19132:19132/udp"
     volumes:
       - bedrockConnect:/brc
+    env_file: "sql.env"
     restart: "unless-stopped"
     stdin_open: true # docker run -i
     tty: true # docker run -t
+  mysql:
+    image: mariadb
+    restart: "unless-stopped"
+    volumes:
+      - bedrockConnect:/var/lib/mysql
+    env_file: sql.env
 #  bind9:
 #    build: 
 #      context: ./bind9
