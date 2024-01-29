@@ -32,9 +32,13 @@ public class BedrockConnect {
     public static boolean userServers = true;
     public static boolean featuredServers = true;
     public static boolean fetchFeaturedIps = true;
+
+    public static boolean fetchIps = false;
+
+    public static boolean storeDisplayNames = true;
     public static File whitelistfile;
 
-    public static String release = "1.32";
+    public static String release = "1.40";
 
     public static HashMap<String, String> featuredServerIps;
 
@@ -106,8 +110,6 @@ public class BedrockConnect {
                                 "<DNSMasqConfig xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" +
                                 "  <DNSMasqEntries>\n" +
                                 "    <DNSMasqHost name=\"hivebedrock.network\" a=\"" + selectedIP + "\" />\n" +
-                                "    <DNSMasqHost name=\"mco.mineplex.com\" a=\"" + selectedIP + "\" />\n" +
-                                "    <DNSMasqHost name=\"play.mineplex.com\" a=\"" + selectedIP + "\" />\n" +
                                 "    <DNSMasqHost name=\"play.inpvp.net\" a=\"" + selectedIP + "\" />\n" +
                                 "    <DNSMasqHost name=\"mco.lbsg.net\" a=\"" + selectedIP + "\" />\n" +
                                 "    <DNSMasqHost name=\"play.lbsg.net\" a=\"" + selectedIP + "\" />\n" +
@@ -132,6 +134,9 @@ public class BedrockConnect {
                 if (str.startsWith("fetch_featured_ips=")) {
                     fetchFeaturedIps = getArgValue(str, "fetch_featured_ips").toLowerCase().equals("true");
                 }
+                if (str.startsWith("fetch_ips=")) {
+                    fetchIps = getArgValue(str, "fetch_ips").toLowerCase().equals("true");
+                }
                 if (str.startsWith("whitelist=")) {
                 	try {
                 		whitelistfile = new File(getArgValue(str, "whitelist"));
@@ -148,6 +153,9 @@ public class BedrockConnect {
               	if (str.startsWith("bindip=")) {
               	    bindIp = getArgValue(str, "bindip");
               	}
+                if (str.startsWith("store_display_names=")) {
+                    storeDisplayNames = getArgValue(str, "store_display_names").toLowerCase().equals("true");
+                }
             }
 
             if(!noDB)
@@ -175,12 +183,10 @@ public class BedrockConnect {
                     File ipFile = new File("featured_server_ips.json");
                     if (ipFile.createNewFile()) {
                         featuredServerIps.put("hivebedrock.network", "167.114.81.89");
-                        featuredServerIps.put("mco.mineplex.com", "108.178.12.125");
                         featuredServerIps.put("mco.cubecraft.net", "51.178.75.10");
                         featuredServerIps.put("mco.lbsg.net", "142.44.240.96");
                         featuredServerIps.put("play.inpvp.net", "52.234.130.241");
                         featuredServerIps.put("play.galaxite.net", "51.222.8.223");
-                        featuredServerIps.put("play.pixelparadise.gg", "40.87.84.106");
 
                         JSONObject jo = new JSONObject();
                         for (Map.Entry server : featuredServerIps.entrySet()) {

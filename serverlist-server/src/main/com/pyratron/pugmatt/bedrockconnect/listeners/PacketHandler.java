@@ -21,16 +21,23 @@ import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.data.AttributeData;
 import org.cloudburstmc.protocol.bedrock.data.PacketCompressionAlgorithm;
 import org.cloudburstmc.protocol.bedrock.packet.*;
+import org.cloudburstmc.protocol.bedrock.util.ChainValidationResult;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
+import org.cloudburstmc.protocol.bedrock.util.JsonUtils;
 import org.cloudburstmc.protocol.common.PacketSignal;
 import org.cloudburstmc.protocol.common.util.Preconditions;
+import org.jose4j.jws.JsonWebSignature;
+import org.jose4j.lang.JoseException;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 import java.util.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class PacketHandler implements BedrockPacketHandler {
 
@@ -44,13 +51,16 @@ public class PacketHandler implements BedrockPacketHandler {
 
     private JSONObject extraData;
 
+    // Used for server icon fix
+    private ScheduledThreadPoolExecutor executor = null;
+
     public void setPlayer(BCPlayer player) {
         this.player = player;
     }
 
-    public static String getIP(String hostname) {
+    public String getIP(String hostname) {
         try {
-            if(BedrockConnect.fetchFeaturedIps) {
+            if(BedrockConnect.fetchFeaturedIps || BedrockConnect.fetchIps) {
                 InetAddress host = InetAddress.getByName(hostname);
                 return host.getHostAddress();
             } else {
@@ -59,7 +69,7 @@ public class PacketHandler implements BedrockPacketHandler {
         } catch (UnknownHostException ex) {
             ex.printStackTrace();
         }
-        return "0.0.0.0";
+        return hostname;
     }
 
     @Override
@@ -150,23 +160,17 @@ public class PacketHandler implements BedrockPacketHandler {
                                     case 0: // Hive
                                         transfer(getIP("hivebedrock.network"), 19132);
                                         break;
-                                    case 1: // Mineplex
-                                        transfer(getIP("mco.mineplex.com"), 19132);
-                                        break;
-                                    case 2: // Cubecraft
+                                    case 1: // Cubecraft
                                         transfer(!BedrockConnect.fetchFeaturedIps ? getIP("mco.cubecraft.net") : "mco.cubecraft.net", 19132);
                                         break;
-                                    case 3: // Lifeboat
+                                    case 2: // Lifeboat
                                         transfer(getIP("mco.lbsg.net"), 19132);
                                         break;
-                                    case 4: // Mineville
+                                    case 3: // Mineville
                                         transfer(getIP("play.inpvp.net"), 19132);
                                         break;
-                                    case 5: // Galaxite
+                                    case 4: // Galaxite
                                         transfer(getIP("play.galaxite.net"), 19132);
-                                        break;
-                                    case 6: // Pixel Paradise
-                                        transfer(getIP("play.pixelparadise.gg"), 19132);
                                         break;
                                 }
                                 break;
@@ -378,11 +382,12 @@ public class PacketHandler implements BedrockPacketHandler {
         List<AttributeData> attributes = Collections.singletonList(new AttributeData("minecraft:player.level", 0f, 24791.00f, 0, 0f));
         updateAttributesPacket.setAttributes(attributes);
 
-        Timer timer = new Timer();
-        TimerTask task = new TimerTask() {
-            public void run() { if(session.isConnected()) { session.sendPacket(updateAttributesPacket); } }
-        };
-        timer.schedule(task, 500);
+        if (executor == null)
+            executor = new ScheduledThreadPoolExecutor(1);
+
+        executor.schedule(() -> {
+            session.sendPacket(updateAttributesPacket);
+        }, 500, TimeUnit.MILLISECONDS);
 
         return PacketSignal.HANDLED;
     }
@@ -390,7 +395,11 @@ public class PacketHandler implements BedrockPacketHandler {
     public void transfer(String ip, int port) {
         try {
             TransferPacket tp = new TransferPacket();
-            tp.setAddress(ip);
+            if(BedrockConnect.fetchIps && UIComponents.isDomain(ip)) {
+                tp.setAddress(getIP(ip));
+            } else {
+                tp.setAddress(ip);
+            }
             tp.setPort(port);
             session.sendPacketImmediately(tp);
         } catch (Exception e) {
@@ -442,63 +451,19 @@ public class PacketHandler implements BedrockPacketHandler {
     @Override
     public void onDisconnect(String reason) {
         System.out.println(name + " disconnected");
+        if(executor != null)
+            executor.shutdown();
         if(player != null)
             server.removePlayer(player);
+
     }
 
-    private static boolean validateChainData(List<SignedJWT> chain) throws Exception {
-        if (chain.size() != 3) {
-            return false;
-        }
+    private boolean verifyJwt(String jwt, PublicKey key) throws JoseException {
+        JsonWebSignature jws = new JsonWebSignature();
+        jws.setKey(key);
+        jws.setCompactSerialization(jwt);
 
-        Payload identity = null;
-        ECPublicKey lastKey = null;
-        boolean mojangSigned = false;
-        Iterator<SignedJWT> iterator = chain.iterator();
-        while (iterator.hasNext()) {
-            SignedJWT jwt = iterator.next();
-            identity = jwt.getPayload();
-
-            // x509 cert is expected in every claim
-            URI x5u = jwt.getHeader().getX509CertURL();
-            if (x5u == null) {
-                return false;
-            }
-
-            ECPublicKey expectedKey = EncryptionUtils.generateKey(jwt.getHeader().getX509CertURL().toString());
-            // First key is self-signed
-            if (lastKey == null) {
-                lastKey = expectedKey;
-            } else if (!lastKey.equals(expectedKey)) {
-                return false;
-            }
-
-            if (!EncryptionUtils.verifyJwt(jwt, lastKey)) {
-                return false;
-            }
-
-            if (mojangSigned) {
-                return !iterator.hasNext();
-            }
-
-            if (lastKey.equals(EncryptionUtils.getMojangPublicKey())) {
-                mojangSigned = true;
-            }
-
-            Object payload = JSONValue.parse(jwt.getPayload().toString());
-            Preconditions.checkArgument(payload instanceof JSONObject, "Payload is not an object");
-
-            Object identityPublicKey = ((JSONObject) payload).get("identityPublicKey");
-            Preconditions.checkArgument(identityPublicKey instanceof String, "identityPublicKey node is missing in chain");
-            lastKey = EncryptionUtils.generateKey((String) identityPublicKey);
-        }
-
-        return mojangSigned;
-    }
-
-
-    private static boolean verifyJwt(JWSObject jwt, ECPublicKey key) throws JOSEException {
-        return jwt.verify(new DefaultJWSVerifierFactory().createJWSVerifier(jwt.getHeader(), key));
+        return jws.verifySignature();
     }
 
     @Override
@@ -531,25 +496,22 @@ public class PacketHandler implements BedrockPacketHandler {
 
     @Override
     public PacketSignal handle(LoginPacket packet) {
-
-        List<SignedJWT> certChainData = packet.getChain();
-
         try {
-            JWSObject jwt = certChainData.get(certChainData.size() - 1);
-            JsonNode payload = Server.JSON_MAPPER.readTree(jwt.getPayload().toBytes());
+            ChainValidationResult chain = EncryptionUtils.validateChain(packet.getChain());
+            JsonNode payload = Server.JSON_MAPPER.valueToTree(chain.rawIdentityClaims());
 
             if (payload.get("extraData").getNodeType() != JsonNodeType.OBJECT) {
                 throw new RuntimeException("AuthData was not found!");
             }
 
-            extraData = (JSONObject) jwt.getPayload().toJSONObject().get("extraData");
+            extraData = new JSONObject(JsonUtils.childAsType(chain.rawIdentityClaims(), "extraData", Map.class));
 
             if (payload.get("identityPublicKey").getNodeType() != JsonNodeType.STRING) {
                 throw new RuntimeException("Identity Public Key was not found!");
             }
-            ECPublicKey identityPublicKey = EncryptionUtils.generateKey(payload.get("identityPublicKey").textValue());
+            ECPublicKey identityPublicKey = EncryptionUtils.parseKey(payload.get("identityPublicKey").textValue());
 
-            JWSObject clientJwt = packet.getExtra();
+            String clientJwt = packet.getExtra();
             verifyJwt(clientJwt, identityPublicKey);
 
             System.out.println("Made it through login - " + "User: " + extraData.getAsString("displayName") + " (" + extraData.getAsString("identity") + ")");

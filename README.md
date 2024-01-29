@@ -19,7 +19,7 @@ Switch: https://www.youtube.com/watch?v=zalT_oR1nPM
 
 Xbox: https://www.youtube.com/watch?v=g8mHvasVHMs
 
-PS4/PS5: https://youtu.be/0MJVVhDeu2s?t=347
+PS4/PS5: https://youtu.be/0MJVVhDeu2s?t=347 (Use 45.55.68.52 for the primary DNS address)
 
 Joining Java Edition Servers: https://www.youtube.com/watch?v=B_oPHl5gz_c
 
@@ -57,13 +57,13 @@ There are multiple BedrockConnect serverlist servers available that can be used,
 
 | IP Address | Location | Maintainer | Note |
 | ------------- | ------------- | ------------- | ------------- |
-| 104.238.130.180 | <img src="https://flagicons.lipis.dev/flags/4x3/us.svg" height="20"> | [Pugmatt](https://github.com/Pugmatt) | Main instance. Multiple load balanced servers. Might be blocked on PS4, try another instance if you experience issues. |
-| 173.82.100.84 | <img src="https://flagicons.lipis.dev/flags/4x3/us.svg" height="20"> | [jdextraze](https://github.com/jdextraze) | |
+| 104.238.130.180 | <img src="https://flagicons.lipis.dev/flags/4x3/us.svg" height="20"> | [Pugmatt](https://github.com/Pugmatt) | Main instance. Multiple load balanced servers. If issues occur on PS4/PS5, try the IP address 45.55.68.52 or the other instances below |
+| 45.55.68.52 | <img src="https://flagicons.lipis.dev/flags/4x3/us.svg" height="20"> | [Pugmatt](https://github.com/Pugmatt) | Alternative DNS server that should work better on PS4/PS5. Directs to the same BedrockConnect server instances as 104.238.130.180. |
 | 207.244.229.200 | <img src="https://flagicons.lipis.dev/flags/4x3/us.svg" height="20"> | [AdamAtomus](https://github.com/adamatomus) | Located in Central US |
 | 213.171.211.142 | <img src="https://flagicons.lipis.dev/flags/4x3/gb.svg" height="20"> | [kmpoppe](https://github.com/kmpoppe) | No DNS service, only BedrockConnect server  |
 | 217.160.58.93 | <img src="https://flagicons.lipis.dev/flags/4x3/de.svg" height="20"> | [kmpoppe](https://github.com/kmpoppe) | No DNS service, only BedrockConnect server |
-| 188.165.49.178 | <img src="https://flagicons.lipis.dev/flags/4x3/fr.svg" height="20"> | [Darkmoi3108](https://github.com/darkmoi3108) | |
 | 134.255.231.119 | <img src="https://flagicons.lipis.dev/flags/4x3/de.svg" height="20"> | [ZAP-Hosting](https://github.com/zaphosting) | |
+| 185.169.180.190 | <img src="https://flagicons.lipis.dev/flags/4x3/tr.svg" height="20"> | [hasankayra04](https://github.com/hasankayra04) | Dns service with NextDNS |
 
 If you are currently hosting a BedrockConnect instance and are interested in adding it to this list, create a pull request adding it to the table above.
 
@@ -106,7 +106,9 @@ The following arguments can be placed in the startup command to ajust settings:
 | featured_servers | If true, the featured servers will be displayed in the serverlist.  If false, the servers are hidden. | true |
 | whitelist | Specify file containing list of whitelisted players. (Should be a text file with the player names specified on seperate lines) | |
 | fetch_featured_ips | If true, dynamically grab the featured server IPs from the domain names. If false, a file ```featured_server_ips.json``` will be generated, containing the hard-coded featured server IPs, and to allow changing them if needed.  | true |
+| fetch_ips | If true, dynamically grab the server IPs from domain names, of any server a user is attempting to join. | false |
 | language | Specify a file containing language customizations. See [guide for changing wording](#change-wording-of-serverlist) | |
+| store_display_names | If true, player displays names will be included in the stored player data. | true |
 
 MySQL example:
 ```
@@ -120,13 +122,13 @@ When hosting your own serverlist server, you add your own custom servers to the 
 [
 	{
 		"name": "My Custom Server 1",
-		"iconUrl": "https://i.imgur.com/3BmFZRE.png",
+		"iconUrl": "https://i.imgur.com/nhumQVP.png",
 		"address": "mc1.example.com",
 		"port": 19132
 	},
 	{
 		"name": "My Custom Server 2",
-		"iconUrl": "https://i.imgur.com/3BmFZRE.png",
+		"iconUrl": "https://i.imgur.com/nhumQVP.png",
 		"address": "mc2.example.com",
 		"port": 19132
 	}
@@ -172,7 +174,7 @@ The icon URL is not required, if omitted it will show the default icon.
 
 For cases where you want to change the wording/language of your BedrockConnect server, you can do this by creating a JSON file in the same directory as the BedrockConnect JAR. The contents of this file should contain the parts of the wording you want to overwrite. 
 
-You can find all the options that be overwritten here: https://github.com/Pugmatt/BedrockConnect/blob/master/serverlist-server/src/main/resources/language.json
+You can find all the options that can be overwritten here: https://github.com/Pugmatt/BedrockConnect/blob/master/serverlist-server/src/main/resources/language.json
 
 Example custom language file:
 ```json
@@ -193,15 +195,13 @@ Once finished, you include it in your server by adding the following arguement t
 
 In the case where you want to use your own DNS server instead of the one I supplied, this is what zones you'll need to set your DNS to in order for BedrockConnect to work:
 
-| Domain  | IP |
-| ------------- | ------------- |
-| geo.hivebedrock.network  | 104.238.130.180  |
-| hivebedrock.network  | 104.238.130.180  |
-| mco.mineplex.com | 104.238.130.180  | 
-| play.inpvp.net | 104.238.130.180  |
-| mco.lbsg.net | 104.238.130.180  |
-| play.galaxite.net | 104.238.130.180 |
-| play.pixelparadise.gg | 104.238.130.180 |
+| Server | Domain  | IP |
+| ------------- | ------------- | ------------- |
+| The Hive | geo.hivebedrock.network  | 104.238.130.180  |
+| The Hive | hivebedrock.network  | 104.238.130.180  |
+| Mineville | play.inpvp.net | 104.238.130.180  |
+| Lifeboat | mco.lbsg.net | 104.238.130.180  |
+| Galaxite | play.galaxite.net | 104.238.130.180 |
 
 *104.238.130.180 is the IP to the BedrockConnect serverlist server. If you are hosting your own BedrockConnect serverlist server as well, obviously use that IP instead*
 

@@ -132,7 +132,7 @@ public class UIComponents {
             player.createError(BedrockConnect.language.getWording("error", "portLarge"));
         else if(name.length() >= 36)
             player.createError(BedrockConnect.language.getWording("error", "nameLarge"));
-        else if (!address.matches("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$") && !address.matches("^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,64}$"))
+        else if (!address.matches("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$") && !address.matches("^((?!-)[A-Za-z0-9_-]{1,63}(?<!-)\\.)+[A-Za-z]{2,64}$"))
             player.createError(BedrockConnect.language.getWording("error", "invalidAddress"));
         else if (!port.matches("[0-9]+"))
             player.createError(BedrockConnect.language.getWording("error", "invalidPort"));
@@ -141,6 +141,10 @@ public class UIComponents {
         else
             return true;
         return false;
+    }
+
+    public static boolean isDomain(String address) {
+        return address.matches("(?![\\d.]+)((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\\.(xn--)?([a-z0-9\\._-]{1,61}|[a-z0-9-]{1,30})");
     }
 
     public static String[] validateAddress(String server, BCPlayer player) {
