@@ -56,7 +56,8 @@ else
 fi 
 
 
-echo "checking if jar file in place"
+echo "check if latest jarfile exists"
+"
 if [ -e "/scripts/BedrockConnect-1.0-SNAPSHOT.jar" ]; then
 	echo "copying updated jar file to volume brc"
     cp /scripts/BedrockConnect-1.0-SNAPSHOT.jar /brc/BedrockConnect-1.0-SNAPSHOT.jar
@@ -69,7 +70,7 @@ fi
 echo "Starting bedrock connect server..."
 #CMD ["java", "-Xms256M", "-Xmx256M", "-jar", "BedrockConnect-1.0-SNAPSHOT.jar", "nodb=true"]
 
-exec java -Xms256M -Xmx256M -jar /brc/BedrockConnect-1.0-SNAPSHOT.jar nodb=${NODB} mysql_user=${MYSQL_USER} mysql_pass=${MYSQL_PASSWORD} mysql_host=${MYSQL_HOST} custom_servers=/brc/custom_servers.json
+exec java -Xms256M -Xmx256M -jar /brc/BedrockConnect-1.0-SNAPSHOT.jar nodb=${NODB} db_type=mysql db_user=${MYSQL_USER} db_pass=${MYSQL_PASSWORD} db_host=${MYSQL_HOST} custom_servers=/brc/custom_servers.json
 
 # Exit container
 exit 0
