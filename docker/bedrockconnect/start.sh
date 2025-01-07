@@ -55,9 +55,10 @@ else
 	fi
 fi 
 
-echo "putting jar file in place"
+
+echo "checking if jar file in place"
 if [ -e "/scripts/BedrockConnect-1.0-SNAPSHOT.jar" ]; then
-	echo "copying jar file from download to volume"
+	echo "copying updated jar file to volume brc"
     cp /scripts/BedrockConnect-1.0-SNAPSHOT.jar /brc/BedrockConnect-1.0-SNAPSHOT.jar
 fi
 
